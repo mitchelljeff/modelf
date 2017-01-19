@@ -371,3 +371,43 @@ def conditional_reader_model(placeholders, nvocab, **options):
     print('ALL VARIABLES (embeddings + model): %d' % get_total_variables())
 
     return (logits, loss, predict)
+
+def model_f_reader_model(placeholders, nvocab, candvocab=None, **options):
+    """
+    modelf reader
+    """
+    # Model
+    # [batch_size, max_seq1_length]
+    question = placeholders['question']
+    # [batch_size, candidate_size]
+    targets = placeholders['targets']
+    # [batch_size, max_num_cands]
+    candidates = placeholders['candidates']
+    with tf.variable_scope("embedders") as varscope:
+        question_embedded = nvocab(question)
+        candidates_embedded = candvocab(candidates)
+        targets_embedded = candvocab(targets)
+    print('TRAINABLE VARIABLES (only embeddings): %d' % get_total_trainable_variables())
+    output = tf.reduce_sum(question_embedded,1,keep_dims=True)
+    print("INPUT SHAPE " + str(question_embedded.get_shape()))
+    print("OUTPUT SHAPE " + str(output.get_shape()))
+    logits, loss, predict = modelf_predictor(output, candidates_embedded, candidates, targets_embedded, 1+options['negsamples'])
+    print('TRAINABLE VARIABLES (embeddings + model): %d' % get_total_trainable_variables())
+    print('ALL VARIABLES (embeddings + model): %d' % get_total_variables())
+    return (logits, loss, predict)
+
+def modelf_predictor(relation, candidate_tuples, candidate_ids, answer_tuple, num_candidates):
+    print(relation.get_shape())
+    print(candidate_tuples.get_shape())
+    print(answer_tuple.get_shape())
+    logits = tf.squeeze(tf.batch_matmul(relation, candidate_tuples, adj_y=True),squeeze_dims=[1])
+    print(logits.get_shape())
+    answer_logit=tf.squeeze(tf.batch_matmul(relation, answer_tuple, adj_y=True),squeeze_dims=[1])
+    print(answer_logit.get_shape())
+    objective = tf.nn.softplus(tf.reduce_sum(logits,1,keep_dims=True)-2*answer_logit)
+    loss = tf.reduce_mean(objective, name='predictor_loss')
+    batchindex= tf.expand_dims(tf.to_int64(tf.range(tf.shape(candidate_ids)[0])),-1)
+    candindex = tf.expand_dims(tf.arg_max(logits,1),-1)
+    indexes   = tf.concat(1,[batchindex,candindex])
+    predict = tf.gather_nd(candidate_ids, indexes, name='prediction')
+    return logits, loss, predict

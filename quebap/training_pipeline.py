@@ -66,7 +66,7 @@ def main():
         'boe_support': models.boe_reader_model,
         'boe_nosupport': models.boenosupport_reader_model,
         #'log_linear': ReaderModel.create_log_linear_reader,
-        #'model_f': ReaderModel.create_model_f_reader,
+        'model_f': models.model_f_reader_model,
     }
 
     support_alts = {'none', 'single', 'multiple'}
@@ -223,6 +223,9 @@ def main():
     print('build NeuralVocab')
     nvocab = NeuralVocab(train_vocab, input_size=args.repr_dim_input, use_pretrained=args.pretrain,
                          train_pretrained=args.train_pretrain, unit_normalize=args.normalize_pretrain)
+    with tf.variable_scope("candvocab") as varscope:
+        candvocab = NeuralVocab(train_candidate_vocab, input_size=args.repr_dim_input, use_pretrained=args.pretrain,
+                                train_pretrained=args.train_pretrain, unit_normalize=args.normalize_pretrain)
     checkpoint()
 
     #(6) Create TensorFlow placeholders and intialize model
@@ -230,7 +233,7 @@ def main():
     print('create placeholders')
     placeholders = create_placeholders(train_data)
     print('build model %s'%args.model)
-    (logits, loss, predict) = reader_models[args.model](placeholders, nvocab, **vars(args))
+    (logits, loss, predict) = reader_models[args.model](placeholders, nvocab, candvocab=candvocab, **vars(args))
 
     #(7) Batch the data via sisyphos.batch.get_feed_dicts
 
