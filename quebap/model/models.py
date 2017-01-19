@@ -410,5 +410,5 @@ def modelf_predictor(relation, candidate_tuples, candidate_ids, answer_tuple):
     batchindex= tf.expand_dims(tf.to_int64(tf.range(tf.shape(candidate_ids)[0])),-1)
     candindex = tf.expand_dims(tf.arg_max(logits,1),-1)
     indexes   = tf.concat(1,[batchindex,candindex])
-    predict = tf.gather_nd(candidate_ids, indexes, name='prediction')
+    predict = tf.arg_max(logits,1)#tf.gather_nd(candidate_ids, indexes, name='prediction')
     return logits, loss, predict
