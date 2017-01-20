@@ -379,10 +379,13 @@ def model_f_reader_model(placeholders, nvocab, candvocab=None, **options):
     # Model
     # [batch_size, max_seq1_length]
     question = placeholders['question']
+    print(question.get_shape())
     # [batch_size, candidate_size]
     targets = placeholders['targets']
+    print(targets.get_shape())
     # [batch_size, max_num_cands]
     candidates = placeholders['candidates']
+    print(candidates.get_shape())
     with tf.variable_scope("embedders") as varscope:
         question_embedded = nvocab(question)
         candidates_embedded = candvocab(candidates)
@@ -390,8 +393,9 @@ def model_f_reader_model(placeholders, nvocab, candvocab=None, **options):
     print('TRAINABLE VARIABLES (only embeddings): %d' % get_total_trainable_variables())
     relation = tf.reduce_sum(question_embedded,1,keep_dims=True)
     answer_tuple = tf.reduce_sum(targets_embedded,1,keep_dims=True)
-    print("INPUT SHAPE " + str(question_embedded.get_shape()))
-    print("OUTPUT SHAPE " + str(relation.get_shape()))
+    print("QUESTION SHAPE " + str(question_embedded.get_shape()))
+    print("RELATION SHAPE " + str(relation.get_shape()))
+    print("ANSWER SHAPE " + str(answer_tuple.get_shape()))
     logits, loss, predict = modelf_predictor(relation, candidates_embedded, candidates, answer_tuple)
     print('TRAINABLE VARIABLES (embeddings + model): %d' % get_total_trainable_variables())
     print('ALL VARIABLES (embeddings + model): %d' % get_total_variables())
