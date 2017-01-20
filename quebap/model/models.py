@@ -396,12 +396,12 @@ def model_f_reader_model(placeholders, nvocab, candvocab=None, **options):
     print("QUESTION SHAPE " + str(question_embedded.get_shape()))
     print("RELATION SHAPE " + str(relation.get_shape()))
     print("ANSWER SHAPE " + str(answer_tuple.get_shape()))
-    logits, loss, predict = modelf_predictor(relation, candidates_embedded, candidates, answer_tuple)
+    logits, loss, predict = modelf_predictor(relation, candidates_embedded, candidates, answer_tuple,targets)
     print('TRAINABLE VARIABLES (embeddings + model): %d' % get_total_trainable_variables())
     print('ALL VARIABLES (embeddings + model): %d' % get_total_variables())
     return (logits, loss, predict)
 
-def modelf_predictor(relation, candidate_tuples, candidate_ids, answer_tuple):
+def modelf_predictor(relation, candidate_tuples, candidate_ids, answer_tuple,targets):
     print(relation.get_shape())
     print(candidate_tuples.get_shape())
     print(answer_tuple.get_shape())
@@ -414,5 +414,5 @@ def modelf_predictor(relation, candidate_tuples, candidate_ids, answer_tuple):
     batchindex= tf.expand_dims(tf.to_int64(tf.range(tf.shape(candidate_ids)[0])),-1)
     candindex = tf.expand_dims(tf.arg_max(logits,1),-1)
     indexes   = tf.concat(1,[batchindex,candindex])
-    predict = tf.arg_max(logits,1, name='prediction')#tf.gather_nd(candidate_ids, indexes, name='prediction')
+    predict = targets[:,0]#tf.arg_max(logits,1, name='prediction')#tf.gather_nd(candidate_ids, indexes, name='prediction')
     return logits, loss, predict
