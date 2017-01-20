@@ -420,5 +420,5 @@ def modelf_predictor(relation, candidate_tuples, candidate_ids, answer_tuple,tar
     indexes   = tf.concat(1,[batchindex,candindex])
     print(indexes.get_shape())
     predict = tf.expand_dims(tf.gather_nd(candidate_ids, indexes),dim=1, name='prediction')
-    print(predicte.get_shape())
+    print(predict.get_shape())
     return logits, loss, predict
